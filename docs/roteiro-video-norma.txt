@@ -1,0 +1,106 @@
+NORMA | ATIVIDADE 04 - MESSAGE BROKER
+Roteiro de gravação: 13 minutos (faixa exigida: 10 a 15 minutos)
+Entrega no AVA: 28/11/2026 | PDF até 6 páginas + MP4 + ZIP do projeto
+Nomes e distribuição final de falas: preencher depois, conforme combinado.
+
+ANTES DE GRAVAR
+1. Abra o projeto norma-atividade no VS Code e deixe visíveis frontend/, api/, workers/, common.py e compose.yaml.
+2. Na raiz norma-atividade, execute `docker compose up -d --build` e confira `docker compose ps`. RabbitMQ deve aparecer healthy.
+3. Abra http://localhost:15672. Login local: norma / norma-local-demo. Abra http://localhost:8000 e http://localhost:8000/demo.html. O Docker e as imagens já foram iniciados; faça a compra normal ao gravar para registrar o cenário ponta a ponta nessa execução.
+4. No Management, deixe Queues and Streams aberto com refresh de 5 segundos. Abra também um terminal com `docker compose logs -f api payment inventory notifications`. Para evitar réplicas extras durante a falha, o serviço payment deve começar com uma instância.
+5. Use somente os contêineres da composição durante a gravação. Não execute workers Python paralelos conectados ao mesmo RabbitMQ.
+6. Use dados fictícios. Não mostre outras abas, arquivos pessoais ou credenciais de serviços externos.
+7. Configure captura de tela e microfone em 1920x1080, se disponível. Faça 20 segundos de teste de áudio. Todos os integrantes devem falar; divida os blocos abaixo conforme o tamanho real do grupo.
+8. As durações incluem cliques, espera e explicação dos resultados. Não é necessário ler sem parar. Se o processamento terminar antes, explique o código correspondente.
+9. A composição Docker já foi iniciada: RabbitMQ healthy, API respondendo em /api/health, páginas da loja e do laboratório em HTTP 200, e um consumidor ativo em cada fila. Os testes de cenários registrados no relatório foram executados antes com RabbitMQ nativo; grave os cenários do vídeo pela composição Docker e só narre resultados que aparecerem na tela.
+
+00:00-01:10 | ABERTURA E DOMÍNIO
+TELA: página inicial da NORMA, coleção e sacola.
+FALA SUGERIDA:
+"Nosso projeto é a NORMA, uma loja de móveis e objetos. A operação principal é a finalização de um pedido. Os produtos e os pagamentos são fictícios, mas a comunicação HTTP, a API e a mensageria são reais. O objetivo é mostrar como uma compra pode ser recebida sem que o navegador precise esperar todos os serviços internos terminarem. Vamos demonstrar fluxo normal, coreografia, durabilidade, queda de serviço, DLQ e escalabilidade horizontal."
+AÇÃO: apresente os integrantes oralmente; cite quem explica cada parte. Mostre a seleção de um produto sem finalizar ainda.
+
+01:10-03:00 | ARQUITETURA E CÓDIGO
+TELA: diagrama do relatório ou do laboratório; depois common.py e workers/worker.py no VS Code.
+FALA SUGERIDA:
+"O frontend envia um POST para a API Flask. A API valida os produtos e calcula o valor no servidor. Ela publica pedido.criado na exchange topic norma.events e devolve HTTP 202. Essa resposta significa recebido, não compra concluída. O broker roteia o mesmo evento para duas filas: norma.payment e norma.notifications. Cada fila recebe sua própria cópia, caracterizando Pub/Sub. Quando o pagamento é aprovado, o worker publica pagamento.aprovado, que chega à fila norma.inventory. O estoque registra a reserva e publica estoque.reservado. Esse encadeamento é uma coreografia: os serviços reagem a eventos, sem chamadas HTTP diretas entre eles."
+AÇÃO: aponte os nomes das exchanges, as routing keys e os bindings na tabela. Abra a função topology().
+FALA COMPLEMENTAR:
+"As filas e exchanges usam durable=True, e as mensagens usam delivery_mode=2. O produtor utiliza publisher confirms. Nos consumidores, auto_ack é falso e o ACK só é enviado depois do processamento. O prefetch é 1. Em caso de erro de negócio, a mensagem vai pela exchange norma.dlx para norma.dlq."
+OBSERVAÇÃO: publisher confirm confirma a publicação no broker; não confirma que o cliente recebeu o produto.
+
+03:00-05:10 | COMPRA NORMAL E COREOGRAFIA AO VIVO
+TELA: loja, Management e terminal com logs Docker dos três workers.
+AÇÕES:
+1. Adicione Poltrona Forma; abra a sacola; avance ao checkout.
+2. Use Cliente Teste, teste@example.com, CEP 01001000, São Paulo, Rua de Teste 100, SP.
+3. Selecione Pix e resultado aprovado. Clique em simular pagamento.
+4. Mostre a resposta HTTP 202, o tempo medido e o estado em processamento.
+5. Mostre payment recebendo pedido.criado e enviando ACK; inventory recebendo pagamento.aprovado; notifications recebendo os eventos.
+6. Volte ao pedido concluído e ao histórico com nomes dos workers.
+FALA SUGERIDA:
+"O navegador já recebeu a resposta enquanto o pagamento ainda estava em execução. O atraso configurado no worker torna essa separação visível. Agora aparece pagamento.aprovado; ele desencadeia a reserva de estoque. O serviço de notificações recebe eventos independentemente. O status final é consultado pela interface e pode chegar depois da resposta inicial. Isso é consistência eventual. Não houve cobrança nem envio de e-mail real."
+SE PERGUNTAREM PELO BANCO: "Usamos SQLite compartilhado como simplificação de armazenamento do laboratório. O fluxo de negócio entre serviços passa pelo RabbitMQ. Em produção, separaríamos os bancos por serviço."
+
+05:10-07:30 | TESTE DE CAOS: WORKER INDISPONÍVEL
+TELA: terminal, laboratório e RabbitMQ Management.
+AÇÕES:
+1. Confirme que `docker compose ps` mostra apenas uma instância de payment.
+2. Execute `docker compose stop payment` e mostre o serviço parado.
+3. No laboratório, clique três vezes em Enviar 1 pedido.
+4. Abra norma.payment no Management. Aguarde a atualização e mostre Consumers=0 e Ready aumentado em 3 em relação ao valor inicial.
+5. Mostre que os pedidos estão recebidos, ainda não concluídos.
+6. Com payment ainda parado, execute `docker compose restart rabbitmq`; espere rabbitmq ficar healthy. Atualize a fila e mostre que Ready continua com a mesma quantidade.
+7. Execute `docker compose start payment`; observe Ready diminuir e os três pedidos concluírem.
+FALA SUGERIDA:
+"O pagamento está indisponível, mas a API continua recebendo pedidos porque o broker está ativo. As mensagens aguardam na fila. Ready indica mensagens prontas para entrega; Unacked representa mensagens já entregues e ainda não confirmadas. Ao religar o worker, ele retoma o consumo. A fila absorveu a indisponibilidade temporária, sem perder esses pedidos. Isso não significa que toda falha é resolvida automaticamente: o broker e seu armazenamento também precisam ser protegidos."
+
+07:30-09:20 | ISOLAMENTO DE FALHAS: DLQ
+TELA: laboratório, logs Docker do payment e fila norma.dlq.
+AÇÕES:
+1. Anote o Ready inicial da DLQ; podem existir mensagens dos ensaios.
+2. Clique Enviar pagamento recusado.
+3. Mostre o log NACK requeue=False e o evento pagamento.recusado no histórico.
+4. Abra norma.dlq e mostre o incremento de uma mensagem.
+5. Em Get messages, escolha requeue=true, obtenha uma mensagem e mostre o corpo e x-death/reason=rejected. Escolha a mensagem pelo ID da compra para correlacionar.
+FALA SUGERIDA:
+"A recusa é uma regra de negócio simulada. O worker emite pagamento.recusado para os interessados e rejeita a mensagem original com requeue falso. A DLX a encaminha para a DLQ. Ela não volta indefinidamente à fila de pagamentos, evitando um loop. A DLQ preserva a mensagem para análise; não representa uma correção automática. Em uma solução real, definiríamos quem revisa e quando é seguro reprocessar."
+ATENÇÃO: Get com requeue=true mantém a evidência; não use purge/delete.
+
+09:20-11:40 | ESCALABILIDADE HORIZONTAL E RAJADA
+TELA: terminal Docker, laboratório e Management.
+AÇÕES:
+1. Execute `docker compose up -d --scale payment=2 payment`.
+2. Confirme Consumers=2 em norma.payment.
+3. Clique Disparar 10 pedidos no laboratório web.
+4. Mostre dez respostas HTTP 202 e os IDs recebidos por A e B.
+5. Aguarde a conclusão dos dez pedidos; abra históricos de pedidos processados por instâncias diferentes.
+FALA SUGERIDA:
+"Agora existem duas instâncias concorrendo pela mesma fila. Cada mensagem dessa fila é entregue a um consumidor de cada vez. Isso é diferente do Pub/Sub mostrado antes, no qual cada serviço tinha sua própria fila. O prefetch igual a um limita mensagens não confirmadas por instância e ajuda a distribuir o trabalho conforme os consumidores ficam disponíveis. A divisão não precisa ser exatamente cinco para cada um. O importante é comprovar que ambos processaram e que os dez pedidos foram concluídos."
+AÇÃO: cite os valores observados na sua execução, não números memorizados de um ensaio anterior.
+
+11:40-13:00 | COMPARAÇÃO, LIMITES E ENCERRAMENTO
+TELA: página final do relatório e estrutura do ZIP no VS Code.
+FALA SUGERIDA:
+"Em uma sequência síncrona, a API aguardaria pagamento, estoque e notificação. A indisponibilidade de um serviço poderia bloquear a resposta e aumentar a latência. Com eventos, a confirmação inicial é rápida e os serviços podem evoluir ou escalar separadamente. Em contrapartida, precisamos lidar com estados intermediários, duplicações, observabilidade e recuperação de falhas. Usamos identificação dos eventos, idempotência e uma outbox para reduzir riscos entre a gravação e a publicação. A entrega é pelo menos uma vez, não exatamente uma vez. A reserva de estoque e o pagamento são simulados; o transporte das mensagens é real. O projeto inclui frontend, API, workers, dependências, Docker Compose e instruções. O relatório reúne arquitetura e evidências."
+ENCERRAMENTO: retome as cinco etapas demonstradas, agradeça e confira se todos falaram.
+
+CHECKLIST FINAL DO AVA
+[ ] Vídeo exportado em MP4, entre 10 e 15 minutos, com áudio de todos.
+[ ] Tela mostra loja, VS Code, terminais e RabbitMQ Management em execução.
+[ ] Teste de caos evidencia Ready antes/depois e retorno dos workers.
+[ ] Teste de DLQ evidencia a mensagem rejeitada e seu ID.
+[ ] Rajada de dez pedidos feita pela aplicação web, com duas réplicas visíveis.
+[ ] Relatório técnico com até seis páginas, diagrama, tabela, prints comentados e comparação.
+[ ] Nomes dos integrantes preenchidos no relatório e apresentação.
+[ ] ZIP contém frontend/, api/, workers/, requirements.txt e README.md.
+[ ] Se o MP4 exceder o limite, siga a alternativa de link no Drive/YouTube indicada pelo professor.
+
+SE ALGO FALHAR DURANTE A GRAVAÇÃO
+- API indisponível: confirme que o terminal da API continua aberto e a porta 8000 está correta.
+- Pedido não sai de recebido: confirme RabbitMQ ativo e worker payment iniciado.
+- Pedido fica em pago: confira inventory.
+- Ready não cresce no caos: procure uma segunda instância de payment ainda ativa.
+- Só um worker recebe a rajada: confira se ambos consomem norma.payment e se Consumers=2.
+- Docker não inicia: abra Docker Desktop, aguarde o mecanismo Linux ficar pronto e repita `docker compose up -d --build`. Não apague volumes.
+- Não narre sucesso se a evidência não apareceu. Resolva a falha e grave novamente esse trecho.
