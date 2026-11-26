@@ -1,0 +1,49 @@
+name: norma-atividade
+x-app: &app
+  build: .
+  environment:
+    RABBITMQ_URL: amqp://norma:norma-local-demo@rabbitmq:5672/%2F
+    DATA_DIR: /data
+    PAYMENT_DELAY: '3'
+  volumes:
+    - app_data:/data
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    hostname: norma-rabbit
+    environment:
+      RABBITMQ_DEFAULT_USER: norma
+      RABBITMQ_DEFAULT_PASS: norma-local-demo
+    ports:
+      - '127.0.0.1:5672:5672'
+      - '127.0.0.1:15672:15672'
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  api:
+    <<: *app
+    command: ['python', '-m', 'api.app']
+    ports: ['127.0.0.1:8000:8000']
+  payment:
+    <<: *app
+    command: ['python', '-m', 'workers.worker', 'payment']
+  inventory:
+    <<: *app
+    command: ['python', '-m', 'workers.worker', 'inventory']
+  notifications:
+    <<: *app
+    command: ['python', '-m', 'workers.worker', 'notifications']
+  integration-test:
+    <<: *app
+    profiles: ['test']
+    command: ['python', 'tests/integration.py']
+volumes:
+  rabbit_data:
+  app_data:

@@ -1,0 +1,15 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Configuracao local e banco de dados da demonstracao
+.env
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# Artefatos temporarios
+*.log

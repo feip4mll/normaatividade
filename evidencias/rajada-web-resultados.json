@@ -1,0 +1,52 @@
+[
+  {
+    "order_id": "95bd2e59-db5d-4ab1-a28b-ebf8c7ea7741",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-A"
+  },
+  {
+    "order_id": "20afe787-b496-4de3-a8ca-7cd2f5686353",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-B"
+  },
+  {
+    "order_id": "b386be01-c3d2-4797-9790-67650548f1ed",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-A"
+  },
+  {
+    "order_id": "0ac228dd-eaad-40b6-a4ba-ce7809969c0a",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-B"
+  },
+  {
+    "order_id": "bf98e835-7202-44fd-bb84-f372799f7cd9",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-A"
+  },
+  {
+    "order_id": "c9e9ae82-bcaf-496a-97dd-5ba6dcf80808",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-B"
+  },
+  {
+    "order_id": "d9c863ff-9495-49ba-8061-4693a147ee49",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-A"
+  },
+  {
+    "order_id": "92bb06e2-13ca-448b-a8fb-79b360fb9c8b",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-B"
+  },
+  {
+    "order_id": "8e301b38-5560-4485-a223-a34f0d005a89",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-A"
+  },
+  {
+    "order_id": "a677a645-bb06-47cb-b295-366cc277aea5",
+    "event": "pagamento.aprovado",
+    "worker": "payment-live-B"
+  }
+]

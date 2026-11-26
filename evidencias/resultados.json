@@ -1,0 +1,139 @@
+{
+  "started_at": "2026-11-26 02:14:56",
+  "tests": {
+    "normal": {
+      "message": "Pedido recebido / Em processamento",
+      "order_id": "102c0dec-17c8-4698-8862-07cb597adb25",
+      "status": "recebido",
+      "total_cents": 21890,
+      "http_status": 202,
+      "response_ms": 59,
+      "final": {
+        "created": 1795670098.0850017,
+        "history": [
+          {
+            "created": 1795670098.085091,
+            "detail": "Pedido validado; aguardando processamento",
+            "event": "pedido.recebido",
+            "worker": "api"
+          },
+          {
+            "created": 1795670098.1406586,
+            "detail": "Notificação registrada; nenhum e-mail real enviado",
+            "event": "notificacao.pedido.criado",
+            "worker": "notifications-test"
+          },
+          {
+            "created": 1795670099.147489,
+            "detail": "Pagamento de teste aprovado",
+            "event": "pagamento.aprovado",
+            "worker": "payment-A"
+          },
+          {
+            "created": 1795670099.1919997,
+            "detail": "Notificação registrada; nenhum e-mail real enviado",
+            "event": "notificacao.pagamento.aprovado",
+            "worker": "notifications-test"
+          },
+          {
+            "created": 1795670099.2088366,
+            "detail": "Reserva fictícia registrada após pagamento aprovado",
+            "event": "estoque.reservado",
+            "worker": "inventory-test"
+          },
+          {
+            "created": 1795670099.2400825,
+            "detail": "Notificação registrada; nenhum e-mail real enviado",
+            "event": "notificacao.estoque.reservado",
+            "worker": "notifications-test"
+          }
+        ],
+        "id": "102c0dec-17c8-4698-8862-07cb597adb25",
+        "status": "concluido",
+        "total": 21890
+      }
+    },
+    "chaos": {
+      "orders": [
+        "f6cb71bc-de9f-4770-8b5a-7b9783fd665d",
+        "e54555ff-519c-4f1c-a1ec-ae94cf146965",
+        "f1645e60-95c1-4835-9bb8-816de48e97e6"
+      ],
+      "stopped": {
+        "ready": 3,
+        "consumers": 0
+      },
+      "after": {
+        "ready": 0,
+        "consumers": 1
+      },
+      "recovered": true
+    },
+    "dlq": {
+      "order": "7d327f67-5cfa-408a-8afa-7798f9da601f",
+      "before": 1,
+      "after": {
+        "ready": 2,
+        "consumers": 0
+      },
+      "final": {
+        "created": 1795670103.3072453,
+        "history": [
+          {
+            "created": 1795670103.3073108,
+            "detail": "Pedido validado; aguardando processamento",
+            "event": "pedido.recebido",
+            "worker": "api"
+          },
+          {
+            "created": 1795670103.3599489,
+            "detail": "Notificação registrada; nenhum e-mail real enviado",
+            "event": "notificacao.pedido.criado",
+            "worker": "notifications-test"
+          },
+          {
+            "created": 1795670104.340241,
+            "detail": "Sem limite (simulado)",
+            "event": "pagamento.recusado",
+            "worker": "payment-A"
+          },
+          {
+            "created": 1795670104.3853753,
+            "detail": "Notificação registrada; nenhum e-mail real enviado",
+            "event": "notificacao.pagamento.recusado",
+            "worker": "notifications-test"
+          }
+        ],
+        "id": "7d327f67-5cfa-408a-8afa-7798f9da601f",
+        "status": "recusado",
+        "total": 21890
+      }
+    },
+    "scaling": {
+      "distribution": {
+        "payment-A": 5,
+        "payment-B": 5
+      },
+      "orders": [
+        "c56e370c-4ad2-4daf-bb95-37a7fd9dccad",
+        "a4e8fb72-ec54-407d-9f49-9f5da0686142",
+        "73b18ad8-3f3f-4d69-a5ea-353af32007c6",
+        "c22d2a28-ab42-4707-8061-89317d6c3ac5",
+        "37aabe25-3559-439f-a5fa-7b5a1498f03b",
+        "94f76cef-494f-4f03-9334-e3a64f981e2e",
+        "b79d4696-779c-41f8-9ed5-03f544f45b79",
+        "ec8f00e4-d080-4371-9ddc-777bb7b210c0",
+        "bcb28ff3-5732-4a7c-bec4-4c1f9dd0214c",
+        "ffa95325-66b5-4546-96be-81f26dc9b46d"
+      ],
+      "queue": {
+        "ready": 0,
+        "consumers": 2
+      }
+    },
+    "idempotency": {
+      "same_order_id": true
+    }
+  },
+  "passed": true
+}

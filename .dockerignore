@@ -1,0 +1,7 @@
+.venv
+__pycache__
+data
+evidencias
+.git
+*.zip
+.env

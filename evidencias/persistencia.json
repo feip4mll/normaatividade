@@ -1,0 +1,7 @@
+{
+  "operation": "rabbitmqctl stop_app + start_app",
+  "before_ready": 3,
+  "after_ready": 3,
+  "consumers": 0,
+  "passed": true
+}
